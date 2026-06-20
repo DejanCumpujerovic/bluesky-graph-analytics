@@ -1,0 +1,64 @@
+# DEO 6.1 — base configuration (overridden by config.dev.yaml, .env, CLI)
+
+bluesky:
+  api_base: "https://bsky.social"
+  requests_per_second: 8
+  timeout_seconds: 30
+
+collection:
+  seed_source_file: "config/seed_profiles.yaml"
+  min_followers: 50
+  max_followers: 5000
+  max_followers_per_seed: 5000
+  max_pages_per_seed: 100
+  snapshot_id: "snap_2025_q1"
+  skip_invalid_seeds: true
+  enforce_mvp_seed_count: false  # set true when seed file has 50–200 entries (DEO 6.2)
+
+storage:
+  database_url: "sqlite+aiosqlite:///data/cache.db"
+
+reproducibility:
+  random_seed: 42
+
+analysis:
+  similarity:
+    metrics: ["jaccard", "adamic_adar", "overlap"]
+    min_overlap_relative: 0.01
+    max_pairs: 5000
+  community:
+    algorithm: "leiden"
+    resolution: 1.0
+    edge_threshold: 0.1
+    modularity_min: 0.3
+    min_overlap_seeds: 1
+  prediction:
+    test_fraction: 0.1
+    negative_ratio: 1.0
+    negative_strategy: "common_neighbor_filtered"
+    node2vec:
+      dimensions: 64
+      walk_length: 80
+      num_walks: 10
+      p: 1.0
+      q: 1.0
+      workers: 1
+    k_values: [10, 50, 100]
+  nlp:
+    text_source: "description"
+    langdetect_threshold: 0.90
+    target_language: "en"
+    top_terms_per_community: 10
+    stopwords: "nltk_english"
+
+ethics:
+  pseudonym_digest_size: 8
+  exclude_fields_on_export: ["display_name", "description"]
+
+logging:
+  level: "INFO"
+  format: "json"
+
+dashboard:
+  host: "0.0.0.0"
+  port: 8501

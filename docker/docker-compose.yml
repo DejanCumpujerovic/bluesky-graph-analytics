@@ -1,0 +1,21 @@
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      args:
+        GIT_COMMIT: ${GIT_COMMIT:-unknown}
+    image: bga:dev
+    container_name: bluesky-graph-analytics
+    env_file: ../.env
+    volumes:
+      - ../data:/app/data
+      - ../config:/app/config
+    ports:
+      - "8501:8501"
+    healthcheck:
+      test: ["CMD", "bga", "health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    working_dir: /app

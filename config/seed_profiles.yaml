@@ -1,0 +1,19 @@
+# DEO 6.2 — seed list (MVP production: 50–200 entries, set enforce_mvp_seed_count: true)
+#
+# Fields: handle (required), did (optional), topic (required), notes, added_by, added_at
+
+seeds:
+  - handle: "jay.bsky.team"
+    topic: "platform"
+    notes: "CEO Bluesky-a, dobar entry point za tech community"
+    added_by: "researcher"
+    added_at: "2026-05-20"
+
+  - handle: "pfrazee.com"
+    did: "did:plc:ragtjsm2j2vknwkz3zp4oxrd"
+    topic: "platform"
+    notes: "Co-founder Bluesky-a"
+
+  - handle: "example.researcher.bsky.social"
+    topic: "academia"
+    notes: "Akademski profil za testiranje"

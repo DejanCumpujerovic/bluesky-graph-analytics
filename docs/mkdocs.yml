@@ -1,0 +1,9 @@
+site_name: Bluesky Graph Analytics
+site_description: Bluesky graph analytics — Phase 1 MVP
+repo_url: https://github.com/your-org/bluesky-graph-analytics
+docs_dir: .
+nav:
+  - Home: ../README.md
+  - Architecture: ../ARCHITECTURE.md
+  - Ethics: ../ETHICS.md
+  - ADRs: adr/
