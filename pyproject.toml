@@ -138,3 +138,7 @@ omit = [
 
 [tool.bandit]
 exclude_dirs = ["tests", ".venv", "alembic/versions"]
+# B104: Streamlit dashboard binds 0.0.0.0 in Docker (intentional).
+# B101: internal invariants after Result.unwrap().
+# B311: research RNG (reproducibility), not crypto.
+skips = ["B101", "B104", "B311"]

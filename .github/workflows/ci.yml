@@ -19,5 +19,5 @@ jobs:
       - run: uv run ruff format --check .
       - run: uv run mypy
       - run: uv run pytest --cov=src/bluesky_graph_analytics --cov-report=term-missing --cov-fail-under=80
-      - run: uv run bandit -r src/bluesky_graph_analytics
+      - run: uv run bandit -r src/bluesky_graph_analytics -c pyproject.toml -ll
       - run: uv run detect-secrets scan --baseline .secrets.baseline
