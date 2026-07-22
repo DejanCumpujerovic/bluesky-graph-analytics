@@ -78,8 +78,15 @@ def community_top_terms(
         token_pattern=r"(?u)\b\w{2,}\b",
         max_features=5000,
     )
+    try:
+        counts = vectorizer.fit_transform([corpus])
+    except ValueError:
+        # empty vocabulary after stopword filtering
+        return (), dict(lang_dist)
+    if counts.shape[1] == 0:
+        return (), dict(lang_dist)
     tfidf = TfidfTransformer()
-    matrix = tfidf.fit_transform([corpus])
+    matrix = tfidf.fit_transform(counts)
     terms = vectorizer.get_feature_names_out()
     scores = matrix.toarray()[0]
     ranked = sorted(zip(terms, scores, strict=False), key=lambda x: -x[1])

@@ -27,3 +27,25 @@ def test_community_top_terms_empty() -> None:
     terms, dist = community_top_terms([], lang_threshold=0.9)
     assert terms == ()
     assert dist == {}
+
+
+def test_community_top_terms_extracts_words() -> None:
+    profiles = [
+        Profile(
+            did=DID("did:plc:a"),
+            description="Graph algorithms and theoretical computer science research",
+            detected_language="en",
+            language_confidence=0.99,
+        ),
+        Profile(
+            did=DID("did:plc:b"),
+            description="Machine learning theory and graph networks in computer science",
+            detected_language="en",
+            language_confidence=0.99,
+        ),
+    ]
+    terms, dist = community_top_terms(profiles, lang_threshold=0.5, top_n=5)
+    assert len(terms) > 0
+    assert dist.get("en", 0) >= 1
+    joined = " ".join(terms)
+    assert "graph" in joined or "computer" in joined or "science" in joined

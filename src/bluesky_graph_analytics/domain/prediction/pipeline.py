@@ -100,8 +100,13 @@ def run_prediction_pipeline(
     all_metrics: list[PredictionMetricsRow] = []
     roc_curves: dict[str, tuple[list[int], list[float]]] = {}
     ranking_scores: dict[tuple[DID, DID], list[float]] = {}
+    warnings: list[str] = []
+    if split.warning:
+        warnings.append(split.warning)
 
     for name, fn in DIRECTED_HEURISTICS.items():
+        if not test_pairs:
+            break
         scorer = cast(Callable[[nx.DiGraph, DID, DID], float], fn)
         y_true, y_score = _labels_and_scores(test_pairs, test_labels, scorer, train_g)
         roc_curves[name] = (list(y_true), list(y_score))
@@ -110,48 +115,55 @@ def run_prediction_pipeline(
                 ranking_scores.setdefault((u, v), []).append(float(score))
         all_metrics.extend(evaluate_scores(y_true, y_score, method=name, k_values=k_values))
 
-    # Node2Vec + LogisticRegression
+    # Node2Vec + LogisticRegression (needs both positive and negative train samples)
     if train_g.number_of_edges() > 0:
-        from node2vec import Node2Vec
-
-        walker = Node2Vec(
-            train_g,
-            dimensions=n2v.dimensions,
-            walk_length=n2v.walk_length,
-            num_walks=n2v.num_walks,
-            p=n2v.p,
-            q=n2v.q,
-            workers=n2v.workers,
-        )
-        n2v_model = walker.fit(window=5, min_count=1, batch_words=4)
-
         train_pos = split.train_edges
         train_neg = common_neighbor_filtered_negatives(
             train_g, seeds, train_pos, ratio=negative_ratio, random_seed=random_seed
         )
-        train_pairs = train_pos + train_neg
         train_labels = [1] * len(train_pos) + [0] * len(train_neg)
-        x_train = _hadamard_features(train_g, n2v_model, train_pairs)
-        clf = LogisticRegression(max_iter=1000, random_state=random_seed)
-        clf.fit(x_train, np.array(train_labels))
+        if len(set(train_labels)) < 2:
+            warnings.append(
+                "Skipped Node2Vec+LogReg: need both positive and negative train edges "
+                "(common with a single-seed star graph)."
+            )
+        else:
+            from node2vec import Node2Vec
 
-        x_test = _hadamard_features(train_g, n2v_model, test_pairs)
-        probas = clf.predict_proba(x_test)[:, 1].tolist()
-        roc_curves["node2vec_logreg"] = (list(test_labels), list(probas))
-        for (u, v), score, label in zip(test_pairs, probas, test_labels, strict=True):
-            if label == 0:
-                ranking_scores.setdefault((u, v), []).append(float(score))
-        all_metrics.extend(
-            evaluate_scores(test_labels, probas, method="node2vec_logreg", k_values=k_values)
-        )
+            walker = Node2Vec(
+                train_g,
+                dimensions=n2v.dimensions,
+                walk_length=n2v.walk_length,
+                num_walks=n2v.num_walks,
+                p=n2v.p,
+                q=n2v.q,
+                workers=n2v.workers,
+            )
+            n2v_model = walker.fit(window=5, min_count=1, batch_words=4)
+
+            train_pairs = train_pos + train_neg
+            x_train = _hadamard_features(train_g, n2v_model, train_pairs)
+            clf = LogisticRegression(max_iter=1000, random_state=random_seed)
+            clf.fit(x_train, np.array(train_labels))
+
+            x_test = _hadamard_features(train_g, n2v_model, test_pairs)
+            probas = clf.predict_proba(x_test)[:, 1].tolist()
+            roc_curves["node2vec_logreg"] = (list(test_labels), list(probas))
+            for (u, v), score, label in zip(test_pairs, probas, test_labels, strict=True):
+                if label == 0:
+                    ranking_scores.setdefault((u, v), []).append(float(score))
+            all_metrics.extend(
+                evaluate_scores(test_labels, probas, method="node2vec_logreg", k_values=k_values)
+            )
 
     ranked = sorted(
         ((u, v, float(np.mean(scores))) for (u, v), scores in ranking_scores.items() if scores),
         key=lambda item: -item[2],
     )
+    combined_warning = " ".join(w for w in warnings if w) or None
     return PredictionPipelineResult(
         metrics=all_metrics,
-        split_warning=split.warning,
+        split_warning=combined_warning,
         roc_curves=roc_curves,
         top_predicted_links=ranked,
     )

@@ -173,15 +173,16 @@ class AtprotoBlueskyClient(BlueskyClient):
                         snapshot_id=snapshot_id,
                     )
                 )
+                # getFollowers returns ProfileView (no counts); getProfile returns detailed.
                 profiles.append(
                     profile_from_atproto(
                         did=follower.did,
-                        handle=follower.handle,
-                        display_name=follower.display_name,
-                        description=None,
-                        followers_count=follower.followers_count or 0,
-                        follows_count=follower.follows_count or 0,
-                        posts_count=follower.posts_count or 0,
+                        handle=getattr(follower, "handle", None),
+                        display_name=getattr(follower, "display_name", None),
+                        description=getattr(follower, "description", None),
+                        followers_count=_optional_int(follower, "followers_count"),
+                        follows_count=_optional_int(follower, "follows_count"),
+                        posts_count=_optional_int(follower, "posts_count"),
                     )
                 )
             return Success((relations, profiles, resp.cursor))
@@ -260,6 +261,13 @@ class AtprotoBlueskyClient(BlueskyClient):
     ) -> Result[list[FollowRelation], DomainError]:
         _ = (did, snapshot_id, limit)
         return Success([])
+
+
+def _optional_int(obj: object, attr: str, default: int = 0) -> int:
+    value = getattr(obj, attr, None)
+    if value is None:
+        return default
+    return int(value)
 
 
 def _extract_status_code(exc: Exception) -> int | None:
