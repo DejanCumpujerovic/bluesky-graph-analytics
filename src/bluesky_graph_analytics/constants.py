@@ -19,6 +19,9 @@ MIN_OVERLAP_ABSOLUTE = 3
 # Maksimalni broj čvorova za "živu" ForceAtlas2 vizualizaciju.
 VIZ_MAX_NODES_LIVE = 500
 
+# Limit ivica po čvoru u HTML grafu (gusta projekcija inače blokira browser).
+VIZ_MAX_EDGES_PER_NODE = 5
+
 # BLAKE2b digest size za pseudonime (8 bajtova = 16 hex karaktera).
 PSEUDONYM_DIGEST_SIZE = 8
 

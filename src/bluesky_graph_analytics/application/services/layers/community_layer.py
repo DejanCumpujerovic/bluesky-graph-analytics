@@ -126,8 +126,12 @@ class CommunityLayerService:
             writer.writeheader()
             writer.writerows(stats_rows)
 
-        write_community_graph_html(projection, out_dir / "community_graph.html")
-        write_community_graph_png(projection, out_dir / "community_graph.png")
+        write_community_graph_html(
+            projection, out_dir / "community_graph.html", communities=communities
+        )
+        write_community_graph_png(
+            projection, out_dir / "community_graph.png", communities=communities
+        )
 
         sizes = [len(v) for v in members.values()]
         duration = round(time.perf_counter() - t0, 1)

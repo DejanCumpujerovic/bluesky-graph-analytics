@@ -89,3 +89,33 @@ def language_distribution(snapshot_id: str) -> dict[str, int]:
     ).fetchall()
     conn.close()
     return {str(r[0]): int(r[1]) for r in rows}
+
+
+def seed_profiles(snapshot_id: str) -> list[dict[str, Any]]:
+    path = _db_path()
+    if not path.is_file():
+        return []
+    conn = sqlite3.connect(path)
+    rows = conn.execute(
+        "SELECT p.did, p.handle, p.followers_count FROM profiles p "
+        "JOIN runs r ON r.id = p.run_id WHERE r.snapshot_id = ? AND p.is_seed = 1",
+        (snapshot_id,),
+    ).fetchall()
+    conn.close()
+    return [{"did": r[0], "handle": r[1], "followers_count": int(r[2] or 0)} for r in rows]
+
+
+def followers_by_seed(snapshot_id: str) -> dict[str, set[str]]:
+    path = _db_path()
+    if not path.is_file():
+        return {}
+    conn = sqlite3.connect(path)
+    rows = conn.execute(
+        "SELECT followee_did, follower_did FROM follows WHERE snapshot_id = ?",
+        (snapshot_id,),
+    ).fetchall()
+    conn.close()
+    out: dict[str, set[str]] = {}
+    for seed, follower in rows:
+        out.setdefault(str(seed), set()).add(str(follower))
+    return out
