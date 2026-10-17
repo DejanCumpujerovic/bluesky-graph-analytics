@@ -40,7 +40,8 @@ async def test_fetch_followers_page_accepts_profile_view_without_counts(
     async def fake_call(fn: object, *args: object, **kwargs: object) -> object:
         return resp
 
-    sdk = SimpleNamespace(app=SimpleNamespace(bsky=SimpleNamespace(graph=SimpleNamespace(get_followers=object()))))
+    graph = SimpleNamespace(get_followers=object())
+    sdk = SimpleNamespace(app=SimpleNamespace(bsky=SimpleNamespace(graph=graph)))
     monkeypatch.setattr(client, "_call", fake_call)
     monkeypatch.setattr(client, "_get_client", lambda: sdk)
 

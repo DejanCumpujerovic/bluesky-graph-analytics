@@ -173,13 +173,12 @@ class AtprotoBlueskyClient(BlueskyClient):
                         snapshot_id=snapshot_id,
                     )
                 )
-                # getFollowers returns ProfileView (no counts); getProfile returns detailed.
                 profiles.append(
                     profile_from_atproto(
                         did=follower.did,
-                        handle=getattr(follower, "handle", None),
-                        display_name=getattr(follower, "display_name", None),
-                        description=getattr(follower, "description", None),
+                        handle=_optional_str(follower, "handle"),
+                        display_name=_optional_str(follower, "display_name"),
+                        description=_optional_str(follower, "description"),
                         followers_count=_optional_int(follower, "followers_count"),
                         follows_count=_optional_int(follower, "follows_count"),
                         posts_count=_optional_int(follower, "posts_count"),
@@ -268,6 +267,11 @@ def _optional_int(obj: object, attr: str, default: int = 0) -> int:
     if value is None:
         return default
     return int(value)
+
+
+def _optional_str(obj: object, attr: str) -> str | None:
+    value = getattr(obj, attr, None)
+    return value if isinstance(value, str) else None
 
 
 def _extract_status_code(exc: Exception) -> int | None:

@@ -1,8 +1,10 @@
+from pathlib import Path
+
 from bluesky_graph_analytics.config import load_settings
 
 
 def test_load_nested_config_yaml() -> None:
-    settings = load_settings()
+    settings = load_settings(dev_config_path=Path("config/does-not-exist.yaml"))
     assert settings.bluesky.api_base == "https://bsky.social"
     assert settings.collection.min_followers == 50
     assert settings.reproducibility.random_seed == 42
